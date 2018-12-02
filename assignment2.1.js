@@ -14,30 +14,18 @@ var transporter = nodemailer.createTransport({
     }
 });
 
-var carrierTypes = { "att":"@txt.att.net", "tmobil":"@tmomail.net",  "mento": "@mymetropcs.com", "verizon": "@vtext.com", "sprint":"@messaging.sprintpcs.com"}; 
+var carrierTypes = { "att":"@txt.att.net", "tmobile":"@tmomail.net",  "mento": "@mymetropcs.com", "verizon": "@vtext.com", "sprint":"@messaging.sprintpcs.com"}; 
 
 http.createServer(function(req,res){
-	var fileStream = fs.createReadStream("./contact.html");
-	if(req.method == "POST")
-	{
-	    fileStream.pipe(res); 
-		var body = '';
-		req.on('data', function (chunk){
-			body += chunk.toString();
-		});
-		req.on('end', function (){
-			var q = url.parse(req.url, true).query;
-			var name =q.name;
-			var email =q.email;
-			var mobile =q.mobile;
-			var subject = q.subject;
-			var message = q.message;
-			var carrier = q.carrier;
-			//fs.appendFile('./test.txt', name + ' ' + email + ' '+ mobile , function(err){
-			//	if(err) throw err;
-			if(q.contact=='email'){
-						console.log('Its email!!!! ' + q.contact);
-				
+	var q = url.parse(req.url, true).query;
+	var name =q.name;
+	var email =q.email;
+	var mobile =q.mobile;
+	var subject = q.subject;
+	var message = q.message;
+	var carrier = q.carrier;
+	if(q.contact){
+		if(q.contact=="email"){
 				var mailOptions = {
 					from: 'touro.msin.636@gmail.com',
 					to: email,
@@ -53,7 +41,6 @@ http.createServer(function(req,res){
 				});
 			}
 			else{
-				Console.log('Then its an SMS');
 				var mailOptions = {
 					from: 'touro.msin.636@gmail.com',
 					to: mobile+carrierTypes[carrier],
@@ -69,14 +56,19 @@ http.createServer(function(req,res){
 					}
 				});
 			}
-		});
 		res.write("Your submission has been sent!");
 		res.end();
 	}
-	else
-	{
-		fileStream.pipe(res);
+	else{
+		fs.readFile('./contact.html', function(err, data) {
+			if (err) {
+				res.writeHead(404, {'Content-Type': 'text/html'});
+				return res.end("404 Not Found");
+			}
+			res.writeHead(200, {'Content-Type': 'text/html'});
+			res.write(data);
+			return res.end();
+		});
 	}
-//	});
 }).listen(8080);
 console.log('listening on port 8080');
